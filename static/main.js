@@ -42,31 +42,35 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _help = __webpack_require__(1);
+
+	var _help2 = _interopRequireDefault(_help);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var hello = 5;
+	console.log(hello);
+	(0, _help2.default)(2);
+
+/***/ },
+/* 1 */
 /***/ function(module, exports) {
 
-	// var renderer = PIXI.autoDetectRenderer(400, 300);
+	'use strict';
 
-	// document.body.appendChild(renderer.view);
-	// // requestAnimationFrame(animate);
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	console.log('required');
 
-	// var stage = new PIXI.Container();
-	// var graphics = new PIXI.Graphics();
-
-	// graphics.lineStyle(5, 0xFF0000);
-	// graphics.moveTo(10, 10);
-	// graphics.lineTo(200, 250);
-
-	// stage.addChild(graphics);
-
-	// renderer.render(stage);
-
-	// require('./help.js');
-
-	import Hello from './help.js';
-
-	const hello = 5;
-	console.log(hello);
-	Hello(2);
+	function Hello(argument) {
+	  console.log(argument);
+	}
+	exports.default = Hello;
 
 /***/ }
 /******/ ]);
