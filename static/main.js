@@ -52,6 +52,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	// import 'style/main'
+
 	var hello = 5;
 	console.log(hello);
 	(0, _help2.default)(2);
