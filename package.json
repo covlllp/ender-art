@@ -1,0 +1,26 @@
+{
+  "name": "ender-art",
+  "version": "1.0.0",
+  "description": "Art based off weapon in Ender's Game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/covlllp/ender-art.git"
+  },
+  "author": "Colin VanLang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/covlllp/ender-art/issues"
+  },
+  "homepage": "https://github.com/covlllp/ender-art#readme",
+  "devDependencies": {
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015": "^6.9.0",
+    "eslint": "^3.1.1",
+    "webpack": "^1.13.1"
+  }
+}
