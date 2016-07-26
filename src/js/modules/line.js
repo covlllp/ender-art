@@ -71,18 +71,18 @@ class Line {
         this.startPoint,
         this.angle,
         this.length * this.percentage
-      );
+      )
     } else {
       startPoint = MathUtils.getEndPoint(
         this.startPoint,
         this.angle,
         this.length * (1 - this.percentage)
-      );
+      )
       endPoint = MathUtils.getEndPoint(
         this.startPoint,
         this.angle,
         this.length
-      );
+      )
     }
 
     this.drawLine(startPoint, endPoint);
