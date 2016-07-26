@@ -46,32 +46,33 @@
 
 	'use strict';
 
-	var _stageContainer = __webpack_require__(1);
+	var _globals = __webpack_require__(1);
+
+	var _globals2 = _interopRequireDefault(_globals);
+
+	var _constants = __webpack_require__(2);
+
+	var _constants2 = _interopRequireDefault(_constants);
+
+	var _stageContainer = __webpack_require__(3);
 
 	var _stageContainer2 = _interopRequireDefault(_stageContainer);
 
-	var _line = __webpack_require__(2);
-
-	var _line2 = _interopRequireDefault(_line);
-
-	var _point = __webpack_require__(3);
-
-	var _point2 = _interopRequireDefault(_point);
-
-	var _mathUtils = __webpack_require__(4);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var graphics = new PIXI.Graphics();
-
-	_stageContainer2.default.addLine(new _line2.default(new _point2.default(100, 10), (0, _mathUtils.degToRad)(-45), 300, 3093151));
-
-	animate();
 
 	function animate() {
 	  requestAnimationFrame(animate);
+	  _globals2.default.colorStep++ % _constants2.default.COLOR_STEPS;
+	  _globals2.default.promiscuityLevel += _globals2.default.isGrowing ? _constants2.default.GROWTH_RATE : -_constants2.default.GROWTH_RATE;
+	  if (_globals2.default.isGrowing && _globals2.default.promiscuityLevel >= _constants2.default.PROMISCUITY_MAX) {
+	    _globals2.default.isGrowing = false;
+	  } else if (!_globals2.default.isGrowing && _globals2.default.promiscuityLevel < 0) {
+	    _globals2.default.isGrowing = true;
+	  }
 	  _stageContainer2.default.tick();
 	}
+
+	animate();
 
 /***/ },
 /* 1 */
@@ -82,8 +83,62 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.default = {
+	  colorStep: 0,
+	  promiscuityLevel: 0,
+	  isGrowing: true
+	};
+
+/***/ },
+/* 2 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = {
+	  LINE_WIDTH: 1,
+	  LINE_LENGTH: 50,
+	  LINE_LENGTH_NOISE: 30,
+	  LINE_COLOR: 8355711,
+	  LINE_SPEED: 0.05,
+	  LINE_SPEED_NOISE: 0.03,
+	  LINE_ANGLE_NOISE: 30,
+	  LINE_MAX: 1000,
+	  LINE_MIN: 5,
+	  CIRCLE_RADIUS: 3,
+	  COLOR_STEPS: 500,
+	  COLOR_NOISE: 100,
+	  PROMISCUITY_MAX: 5,
+	  GROWTH_RATE: 0.005,
+	  GROWTH_NOISE: 1
+	};
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _line = __webpack_require__(4);
+
+	var _line2 = _interopRequireDefault(_line);
+
+	var _constants = __webpack_require__(2);
+
+	var _constants2 = _interopRequireDefault(_constants);
+
+	var _mathUtils = __webpack_require__(6);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -97,38 +152,62 @@
 	  }
 
 	  _createClass(StageContainer, [{
-	    key: "addToStage",
+	    key: 'addToStage',
 	    value: function addToStage(element) {
 	      this.stage.addChild(element);
 	    }
 	  }, {
-	    key: "removeFromStage",
+	    key: 'removeFromStage',
 	    value: function removeFromStage(element) {
 	      this.stage.removeChild(element);
 	    }
 	  }, {
-	    key: "addLine",
+	    key: 'addLine',
 	    value: function addLine(line) {
+	      if (!line.isInWindow || this.lines.length > _constants2.default.LINE_MAX) return;
 	      this.lines.push(line);
 	      this.addToStage(line.lineGraphic);
 	      this.addToStage(line.circleGraphic);
 	    }
 	  }, {
-	    key: "tick",
+	    key: 'tick',
 	    value: function tick() {
 	      var _this = this;
 
-	      this.lines.forEach(function (line) {
+	      var newLines = [];
+	      this.lines = this.lines.filter(function (line) {
+	        line.nextFrame();
+
 	        if (!line.isGrowing) {
 	          _this.removeFromStage(line.circleGraphic);
 	          line.removeCircle();
+	          if (!line.hasHadChildren) {
+	            var childLines = line.getChildLines((0, _mathUtils.getGrowthRate)());
+	            childLines.forEach(function (childLine) {
+	              newLines.push(childLine);
+	            });
+	          }
 	        }
-	        line.nextFrame();
+	        if (!line.shouldBeDrawn) {
+	          _this.removeFromStage(line.lineGraphic);
+	          line.cleanUpLine();
+	          return false;
+	        }
+	        return true;
 	      });
+
+	      newLines.forEach(function (line) {
+	        _this.addLine(line);
+	      });
+
+	      while (this.lines.length < _constants2.default.LINE_MIN) {
+	        this.addLine(_line2.default.generateRandomLine());
+	      }
+
 	      this.renderStage();
 	    }
 	  }, {
-	    key: "renderStage",
+	    key: 'renderStage',
 	    value: function renderStage() {
 	      this.renderer.render(this.stage);
 	    }
@@ -143,7 +222,7 @@
 	exports.default = new StageContainer(renderer);
 
 /***/ },
-/* 2 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -154,35 +233,38 @@
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _point = __webpack_require__(3);
+	var _point = __webpack_require__(5);
 
 	var _point2 = _interopRequireDefault(_point);
 
-	var _mathUtils = __webpack_require__(4);
+	var _mathUtils = __webpack_require__(6);
 
-	var MathUtils = _interopRequireWildcard(_mathUtils);
+	var _lineUtils = __webpack_require__(7);
 
-	var _constants = __webpack_require__(5);
+	var _colorUtils = __webpack_require__(8);
+
+	var _constants = __webpack_require__(2);
 
 	var _constants2 = _interopRequireDefault(_constants);
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var Line = function () {
-	  function Line(startPoint, angle, length, color) {
+	  function Line(startPoint, angle, length, color, speed) {
 	    _classCallCheck(this, Line);
 
 	    this.startPoint = startPoint;
+	    this.targetPoint = (0, _mathUtils.getEndPoint)(startPoint, angle, length);
 	    this.angle = angle;
 	    this.length = length;
 	    this.color = color;
+	    this.speed = speed;
 
 	    this.percentage = 0;
 	    this.isGrowing = true;
+	    this.hasHadChildren = false;
 
 	    this.lineGraphic = new PIXI.Graphics();
 	    this.circleGraphic = new PIXI.Graphics();
@@ -227,34 +309,67 @@
 	      this.removeCircle();
 	    }
 	  }, {
+	    key: 'getLineEndPoints',
+	    value: function getLineEndPoints() {
+	      var startPoint = void 0;
+	      var endPoint = void 0;
+	      if (this.isGrowing) {
+	        startPoint = this.startPoint;
+	        endPoint = (0, _mathUtils.getEndPoint)(this.startPoint, this.angle, this.length * this.percentage);
+	      } else {
+	        startPoint = (0, _mathUtils.getEndPoint)(this.startPoint, this.angle, this.length * (1 - this.percentage));
+	        endPoint = this.targetPoint;
+	      }
+
+	      return { startPoint: startPoint, endPoint: endPoint };
+	    }
+	  }, {
 	    key: 'nextFrame',
 	    value: function nextFrame() {
-	      if (this.isGrowing) {
-	        this.percentage += 0.1;
-	      } else {
-	        this.percentage -= 0.1;
-	      }
+	      this.percentage += this.isGrowing ? this.speed : -this.speed;
 
 	      if (this.percentage >= 1 && this.isGrowing) {
 	        this.isGrowing = false;
 	      }
-	      var startPoint = void 0,
-	          endPoint = void 0;
-	      if (this.isGrowing) {
-	        startPoint = this.startPoint;
-	        endPoint = MathUtils.getEndPoint(this.startPoint, this.angle, this.length * this.percentage);
-	      } else {
-	        startPoint = MathUtils.getEndPoint(this.startPoint, this.angle, this.length * (1 - this.percentage));
-	        endPoint = MathUtils.getEndPoint(this.startPoint, this.angle, this.length);
-	      }
+
+	      var _getLineEndPoints = this.getLineEndPoints();
+
+	      var startPoint = _getLineEndPoints.startPoint;
+	      var endPoint = _getLineEndPoints.endPoint;
+
 
 	      this.drawLine(startPoint, endPoint);
 	      if (this.isGrowing) this.drawCircle(endPoint);
 	    }
 	  }, {
+	    key: 'getChildLines',
+	    value: function getChildLines(numChildren) {
+	      var _this = this;
+
+	      this.hasHadChildren = true;
+	      var newAngles = (0, _lineUtils.getNoisyAngles)(this.angle, numChildren);
+	      return newAngles.map(function (angle) {
+	        return new Line(_this.targetPoint, angle, (0, _lineUtils.getNoisyLength)(), (0, _colorUtils.getNoisyColor)(), (0, _lineUtils.getNoisySpeed)());
+	      });
+	    }
+	  }, {
 	    key: 'shouldBeDrawn',
 	    get: function get() {
-	      return this.isGrowing || this.percentage;
+	      return this.isGrowing || this.percentage >= 0;
+	    }
+	  }, {
+	    key: 'isInWindow',
+	    get: function get() {
+	      var targetPoint = this.targetPoint;
+
+	      return targetPoint.x > 0 && targetPoint.y > 0 && targetPoint.x < window.innerWidth && targetPoint.y < window.innerHeight;
+	    }
+	  }], [{
+	    key: 'generateRandomLine',
+	    value: function generateRandomLine() {
+	      var randomPoint = new _point2.default(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+	      var randomAngle = Math.random() * 360;
+	      return new Line(randomPoint, randomAngle, (0, _lineUtils.getNoisyLength)(), (0, _colorUtils.getNoisyColor)(), (0, _lineUtils.getNoisySpeed)());
 	    }
 	  }]);
 
@@ -264,7 +379,7 @@
 	exports.default = Line;
 
 /***/ },
-/* 3 */
+/* 5 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -285,7 +400,7 @@
 	exports.default = Point;
 
 /***/ },
-/* 4 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -293,38 +408,168 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.degToRad = exports.getEndPoint = undefined;
+	exports.getEndPoint = exports.degToRad = undefined;
+	exports.getGrowthRate = getGrowthRate;
 
-	var _point = __webpack_require__(3);
+	var _point = __webpack_require__(5);
 
 	var _point2 = _interopRequireDefault(_point);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	var _constants = __webpack_require__(2);
 
-	var getEndPoint = exports.getEndPoint = function getEndPoint(startPoint, angle, length) {
-	  var y = startPoint.y - Math.sin(angle) * length;
-	  var x = Math.cos(angle) * length + startPoint.x;
-	  return new _point2.default(x, y);
-	};
+	var _constants2 = _interopRequireDefault(_constants);
+
+	var _globals = __webpack_require__(1);
+
+	var _globals2 = _interopRequireDefault(_globals);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var degToRad = exports.degToRad = function degToRad(degree) {
 	  return degree * Math.PI / 180;
 	};
 
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
+	var getEndPoint = exports.getEndPoint = function getEndPoint(startPoint, angle, length) {
+	  var angleRads = degToRad(angle);
+	  var y = startPoint.y - Math.sin(angleRads) * length;
+	  var x = Math.cos(angleRads) * length + startPoint.x;
+	  return new _point2.default(x, y);
+	};
 
-	"use strict";
+	function getGrowthRate() {
+	  return Math.round(_globals2.default.promiscuityLevel + (Math.random() - 0.5) * _constants2.default.GROWTH_NOISE);
+	}
+
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.default = {
-	  LINE_WIDTH: 1,
-	  LINE_COLOR: 8355711,
-	  CIRCLE_RADIUS: 4
+	exports.getNoisySpeed = getNoisySpeed;
+	exports.getNoisyLength = getNoisyLength;
+	exports.getNoisyAngles = getNoisyAngles;
+
+	var _constants = __webpack_require__(2);
+
+	var _constants2 = _interopRequireDefault(_constants);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function getNoisySpeed() {
+	  return _constants2.default.LINE_SPEED + (Math.random() - 0.5) * _constants2.default.LINE_SPEED_NOISE;
+	}
+
+	function getNoisyLength() {
+	  return _constants2.default.LINE_LENGTH + (Math.random() - 0.5) * _constants2.default.LINE_LENGTH_NOISE;
+	}
+
+	function getNoisyAngles(currentAngle, numAngles) {
+	  var topBound = currentAngle + 90;
+	  var bottomBound = currentAngle - 90;
+	  var angleRange = (topBound - bottomBound) / numAngles;
+
+	  var newAngles = [];
+	  var bottomAngleBound = bottomBound;
+
+	  for (var i = 0; i < numAngles; i++) {
+	    var angle = bottomAngleBound + angleRange / 2;
+	    angle += (Math.random() - 0.5) * _constants2.default.LINE_ANGLE_NOISE;
+	    newAngles.push(angle % 360);
+	    bottomAngleBound += angleRange;
+	  }
+	  return newAngles;
+	}
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.rgb2Color = undefined;
+	exports.rainbow = rainbow;
+	exports.getNoisyColor = getNoisyColor;
+
+	var _constants = __webpack_require__(2);
+
+	var _constants2 = _interopRequireDefault(_constants);
+
+	var _globals = __webpack_require__(1);
+
+	var _globals2 = _interopRequireDefault(_globals);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var rgb2Color = exports.rgb2Color = function rgb2Color(red, green, blue) {
+	  return red * Math.pow(16, 4) + green * Math.pow(16, 2) + blue;
 	};
+
+	/**
+	 * Converts an HSL color value to RGB. Conversion formula
+	 * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+	 * Assumes h, s, and l are contained in the set [0, 1] and
+	 * returns r, g, and b in the set [0, 255].
+	 *
+	 * @param   {number}  h       The hue
+	 * @param   {number}  s       The saturation
+	 * @param   {number}  l       The lightness
+	 * @return  {Array}           The RGB representation
+	 */
+	function hslToRgb(h, s, l) {
+	  var r = void 0;
+	  var g = void 0;
+	  var b = void 0;
+
+	  if (s === 0) {
+	    r = g = b = l; // achromatic
+	  } else {
+	    var hue2rgb = function hue2rgb(p, q, t) {
+	      var u = t;
+	      if (t < 0) u += 1;
+	      if (t > 1) u -= 1;
+	      if (u < 1 / 6) return p + (q - p) * 6 * u;
+	      if (u < 1 / 2) return q;
+	      if (u < 2 / 3) return p + (q - p) * (2 / 3 - u) * 6;
+	      return p;
+	    };
+
+	    var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+	    var p = 2 * l - q;
+	    r = hue2rgb(p, q, h + 1 / 3);
+	    g = hue2rgb(p, q, h);
+	    b = hue2rgb(p, q, h - 1 / 3);
+	  }
+
+	  return {
+	    red: Math.round(r * 255),
+	    green: Math.round(g * 255),
+	    blue: Math.round(b * 255)
+	  };
+	}
+
+	function rainbow(n) {
+	  var h = n % _constants2.default.COLOR_STEPS / _constants2.default.COLOR_STEPS;
+
+	  var _hslToRgb = hslToRgb(h, 1, 0.5);
+
+	  var red = _hslToRgb.red;
+	  var green = _hslToRgb.green;
+	  var blue = _hslToRgb.blue;
+
+	  return rgb2Color(red, green, blue);
+	}
+
+	function getNoisyColor() {
+	  var noiseLevel = _constants2.default.COLOR_NOISE;
+	  return rainbow(_globals2.default.colorStep + (Math.random() * noiseLevel - noiseLevel / 2));
+	}
 
 /***/ }
 /******/ ]);

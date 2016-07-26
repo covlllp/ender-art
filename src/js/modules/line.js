@@ -1,17 +1,22 @@
 import Point from 'js/modules/point';
 
-import * as MathUtils from 'js/utils/mathUtils';
+import { getEndPoint } from 'js/utils/mathUtils';
+import { getNoisySpeed, getNoisyLength, getNoisyAngles } from 'js/utils/lineUtils';
+import { getNoisyColor } from 'js/utils/colorUtils';
 import constants from 'js/utils/constants';
 
 class Line {
-  constructor(startPoint, angle, length, color) {
+  constructor(startPoint, angle, length, color, speed) {
     this.startPoint = startPoint;
+    this.targetPoint = getEndPoint(startPoint, angle, length);
     this.angle = angle;
     this.length = length;
     this.color = color;
+    this.speed = speed;
 
     this.percentage = 0;
     this.isGrowing = true;
+    this.hasHadChildren = false;
 
     this.lineGraphic = new PIXI.Graphics();
     this.circleGraphic = new PIXI.Graphics();
@@ -19,7 +24,17 @@ class Line {
   }
 
   get shouldBeDrawn() {
-    return this.isGrowing || this.percentage;
+    return this.isGrowing || this.percentage >= 0;
+  }
+
+  get isInWindow() {
+    const { targetPoint } = this;
+    return (
+      targetPoint.x > 0 &&
+      targetPoint.y > 0 &&
+      targetPoint.x < window.innerWidth &&
+      targetPoint.y < window.innerHeight
+    );
   }
 
   drawLine(startPoint, endPoint) {
@@ -54,40 +69,58 @@ class Line {
     this.removeCircle();
   }
 
-  nextFrame() {
+  getLineEndPoints() {
+    let startPoint;
+    let endPoint;
     if (this.isGrowing) {
-      this.percentage += 0.1;
+      startPoint = this.startPoint;
+      endPoint = getEndPoint(
+        this.startPoint,
+        this.angle,
+        this.length * this.percentage
+      );
     } else {
-      this.percentage -= 0.1;
+      startPoint = getEndPoint(
+        this.startPoint,
+        this.angle,
+        this.length * (1 - this.percentage)
+      );
+      endPoint = this.targetPoint;
     }
+
+    return { startPoint, endPoint };
+  }
+
+  nextFrame() {
+    this.percentage += this.isGrowing ? this.speed : -this.speed;
 
     if (this.percentage >= 1 && this.isGrowing) {
       this.isGrowing = false;
     }
-    let startPoint, endPoint;
-    if (this.isGrowing) {
-      startPoint = this.startPoint;
-      endPoint = MathUtils.getEndPoint(
-        this.startPoint,
-        this.angle,
-        this.length * this.percentage
-      )
-    } else {
-      startPoint = MathUtils.getEndPoint(
-        this.startPoint,
-        this.angle,
-        this.length * (1 - this.percentage)
-      )
-      endPoint = MathUtils.getEndPoint(
-        this.startPoint,
-        this.angle,
-        this.length
-      )
-    }
+
+    const { startPoint, endPoint } = this.getLineEndPoints();
 
     this.drawLine(startPoint, endPoint);
     if (this.isGrowing) this.drawCircle(endPoint);
   }
+
+  getChildLines(numChildren) {
+    this.hasHadChildren = true;
+    const newAngles = getNoisyAngles(this.angle, numChildren);
+    return newAngles.map((angle) => (
+      new Line(this.targetPoint, angle, getNoisyLength(), getNoisyColor(), getNoisySpeed())
+    ));
+  }
+
+  static generateRandomLine() {
+    const randomPoint = new Point(
+      Math.random() * window.innerWidth,
+      Math.random() * window.innerHeight
+    );
+    const randomAngle = Math.random() * 360;
+    return new Line(randomPoint, randomAngle, getNoisyLength(), getNoisyColor(), getNoisySpeed());
+  }
+
 }
 
 export default Line;

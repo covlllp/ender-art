@@ -1,16 +1,17 @@
+import globals from 'js/globals';
+import constants from 'js/utils/constants';
 import stageContainer from 'js/modules/stageContainer';
-import Line from 'js/modules/line';
-import Point from 'js/modules/point';
-
-import { degToRad } from 'js/utils/mathUtils';
-
-const graphics = new PIXI.Graphics();
-
-stageContainer.addLine(new Line(new Point(100, 10), degToRad(-45), 300, 3093151));
-
-animate();
 
 function animate() {
   requestAnimationFrame(animate);
+  globals.colorStep++ % constants.COLOR_STEPS;
+  globals.promiscuityLevel += globals.isGrowing ? constants.GROWTH_RATE : - constants.GROWTH_RATE;
+  if (globals.isGrowing && globals.promiscuityLevel >= constants.PROMISCUITY_MAX) {
+    globals.isGrowing = false;
+  } else if (!globals.isGrowing && globals.promiscuityLevel < 0) {
+    globals.isGrowing = true;
+  }
   stageContainer.tick();
 }
+
+animate();
