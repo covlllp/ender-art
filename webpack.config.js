@@ -2,6 +2,7 @@
 var path = require('path')
 
 var entryPath = './src/js/index.js';
+var jsPath = path.join(__dirname, 'src', 'js');
 
 module.exports = {
   resolve: {
@@ -14,9 +15,15 @@ module.exports = {
     filename: 'main.js'
   },
   module: {
-    loaders: [
+    preLoaders: [
       {
-        test: path.join(__dirname, 'src', 'js'),
+        test: jsPath,
+        loader: 'eslint'
+      }
+    ],
+    loaders:[
+      {
+        test: jsPath,
         loader: 'babel-loader'
       },
       {
