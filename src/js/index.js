@@ -20,8 +20,8 @@ function animate() {
 }
 
 function resize() {
-  const width = $(window).width() - 1;
-  const height = $(window).height() - 1;
+  const width = $(window).width() - 5;
+  const height = $(window).height() - 5;
   renderer.resize(width, height);
 }
 
