@@ -19,7 +19,12 @@ class Line {
     this.hasHadChildren = false;
 
     this.lineGraphic = new PIXI.Graphics();
-    this.circleGraphic = new PIXI.Graphics();
+
+    const texture = PIXI.Texture.fromImage('src/assets/circle.png');
+    this.circle = new PIXI.Sprite(texture);
+    this.circle.width = this.circle.height = constants.CIRCLE_RADIUS * 2;
+    this.circle.tint = color;
+
     this.drawCircle(startPoint);
   }
 
@@ -45,9 +50,8 @@ class Line {
   }
 
   drawCircle(point) {
-    this.circleGraphic.clear();
-    this.circleGraphic.beginFill(this.color);
-    this.circleGraphic.drawCircle(point.x, point.y, constants.CIRCLE_RADIUS);
+    this.circle.pivot.x = point.x;
+    this.circle.pivot.y = point.y;
   }
 
   removeLine() {
@@ -58,10 +62,10 @@ class Line {
   }
 
   removeCircle() {
-    if (this.circleGraphic) {
-      this.circleGraphic.destroy();
-      delete this.circleGraphic;
-    }
+    // if (this.circleGraphic) {
+    //   this.circleGraphic.destroy();
+    //   delete this.circleGraphic;
+    // }
   }
 
   cleanUpLine() {

@@ -167,7 +167,7 @@
 	      if (!line.isInWindow || this.lines.length > _constants2.default.LINE_MAX) return;
 	      this.lines.push(line);
 	      this.addToStage(line.lineGraphic);
-	      this.addToStage(line.circleGraphic);
+	      this.addToStage(line.circle);
 	    }
 	  }, {
 	    key: 'tick',
@@ -179,7 +179,7 @@
 	        line.nextFrame();
 
 	        if (!line.isGrowing) {
-	          _this.removeFromStage(line.circleGraphic);
+	          _this.removeFromStage(line.circle);
 	          line.removeCircle();
 	          if (!line.hasHadChildren) {
 	            var childLines = line.getChildLines((0, _mathUtils.getGrowthRate)());
@@ -267,7 +267,12 @@
 	    this.hasHadChildren = false;
 
 	    this.lineGraphic = new PIXI.Graphics();
-	    this.circleGraphic = new PIXI.Graphics();
+
+	    var texture = PIXI.Texture.fromImage('src/assets/circle.png');
+	    this.circle = new PIXI.Sprite(texture);
+	    this.circle.width = this.circle.height = _constants2.default.CIRCLE_RADIUS * 2;
+	    this.circle.tint = color;
+
 	    this.drawCircle(startPoint);
 	  }
 
@@ -282,9 +287,8 @@
 	  }, {
 	    key: 'drawCircle',
 	    value: function drawCircle(point) {
-	      this.circleGraphic.clear();
-	      this.circleGraphic.beginFill(this.color);
-	      this.circleGraphic.drawCircle(point.x, point.y, _constants2.default.CIRCLE_RADIUS);
+	      this.circle.pivot.x = point.x;
+	      this.circle.pivot.y = point.y;
 	    }
 	  }, {
 	    key: 'removeLine',
@@ -297,10 +301,10 @@
 	  }, {
 	    key: 'removeCircle',
 	    value: function removeCircle() {
-	      if (this.circleGraphic) {
-	        this.circleGraphic.destroy();
-	        delete this.circleGraphic;
-	      }
+	      // if (this.circleGraphic) {
+	      //   this.circleGraphic.destroy();
+	      //   delete this.circleGraphic;
+	      // }
 	    }
 	  }, {
 	    key: 'cleanUpLine',

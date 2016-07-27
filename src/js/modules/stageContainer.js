@@ -21,7 +21,7 @@ class StageContainer {
     if (!line.isInWindow || this.lines.length > constants.LINE_MAX) return;
     this.lines.push(line);
     this.addToStage(line.lineGraphic);
-    this.addToStage(line.circleGraphic);
+    this.addToStage(line.circle);
   }
 
   tick() {
@@ -30,7 +30,7 @@ class StageContainer {
       line.nextFrame();
 
       if (!line.isGrowing) {
-        this.removeFromStage(line.circleGraphic);
+        this.removeFromStage(line.circle);
         line.removeCircle();
         if (!line.hasHadChildren) {
           const childLines = line.getChildLines(getGrowthRate());
