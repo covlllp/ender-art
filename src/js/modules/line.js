@@ -15,21 +15,20 @@ class Line {
     this.speed = speed;
 
     this.percentage = 0;
-    this.isGrowing = true;
-    this.hasHadChildren = false;
-
-    this.lineGraphic = new PIXI.Graphics();
 
     const texture = PIXI.Texture.fromImage('src/assets/circle.png');
-    this.circle = new PIXI.Sprite(texture);
-    this.circle.width = this.circle.height = constants.CIRCLE_RADIUS * 2;
-    this.circle.tint = color;
+    const circle = new PIXI.Sprite(texture);
+    circle.width = circle.height = constants.CIRCLE_RADIUS * 2;
+    circle.tint = color;
+    circle.alpha = 0.8;
+    circle.anchor.x = circle.anchor.y = 0.5;
+    this.circle = circle;
 
-    this.drawCircle(startPoint);
+    this.moveCircle(startPoint);
   }
 
   get shouldBeDrawn() {
-    return this.isGrowing || this.percentage >= 0;
+    return this.percentage < 1;
   }
 
   get isInWindow() {
@@ -42,70 +41,22 @@ class Line {
     );
   }
 
-  drawLine(startPoint, endPoint) {
-    this.lineGraphic.clear();
-    this.lineGraphic.lineStyle(constants.LINE_WIDTH, constants.LINE_COLOR);
-    this.lineGraphic.moveTo(startPoint.x, startPoint.y);
-    this.lineGraphic.lineTo(endPoint.x, endPoint.y);
+  moveCircle(point) {
+    this.circle.position.x = point.x;
+    this.circle.position.y = point.y;
   }
 
-  drawCircle(point) {
-    this.circle.pivot.x = point.x;
-    this.circle.pivot.y = point.y;
-  }
-
-  removeLine() {
-    if (this.lineGraphic) {
-      this.lineGraphic.destroy();
-      delete this.lineGraphic;
-    }
-  }
-
-  removeCircle() {
-    // if (this.circleGraphic) {
-    //   this.circleGraphic.destroy();
-    //   delete this.circleGraphic;
-    // }
-  }
-
-  cleanUpLine() {
-    this.removeLine();
-    this.removeCircle();
-  }
-
-  getLineEndPoints() {
-    let startPoint;
-    let endPoint;
-    if (this.isGrowing) {
-      startPoint = this.startPoint;
-      endPoint = getEndPoint(
-        this.startPoint,
-        this.angle,
-        this.length * this.percentage
-      );
-    } else {
-      startPoint = getEndPoint(
-        this.startPoint,
-        this.angle,
-        this.length * (1 - this.percentage)
-      );
-      endPoint = this.targetPoint;
-    }
-
-    return { startPoint, endPoint };
+  getCurrentPosition() {
+    return getEndPoint(
+      this.startPoint,
+      this.angle,
+      this.length * this.percentage
+    );
   }
 
   nextFrame() {
-    this.percentage += this.isGrowing ? this.speed : -this.speed;
-
-    if (this.percentage >= 1 && this.isGrowing) {
-      this.isGrowing = false;
-    }
-
-    const { startPoint, endPoint } = this.getLineEndPoints();
-
-    this.drawLine(startPoint, endPoint);
-    if (this.isGrowing) this.drawCircle(endPoint);
+    this.percentage += this.speed;
+    this.moveCircle(this.getCurrentPosition());
   }
 
   getChildLines(numChildren) {

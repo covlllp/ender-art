@@ -20,7 +20,6 @@ class StageContainer {
   addLine(line) {
     if (!line.isInWindow || this.lines.length > constants.LINE_MAX) return;
     this.lines.push(line);
-    this.addToStage(line.lineGraphic);
     this.addToStage(line.circle);
   }
 
@@ -31,17 +30,12 @@ class StageContainer {
 
       if (!line.isGrowing) {
         this.removeFromStage(line.circle);
-        line.removeCircle();
         if (!line.hasHadChildren) {
           const childLines = line.getChildLines(getGrowthRate());
           childLines.forEach((childLine) => {
             newLines.push(childLine);
           });
         }
-      }
-      if (!line.shouldBeDrawn) {
-        this.removeFromStage(line.lineGraphic);
-        line.cleanUpLine();
         return false;
       }
       return true;
@@ -54,6 +48,7 @@ class StageContainer {
     }
 
     this.renderStage();
+    debugger;
   }
 
   renderStage() {
