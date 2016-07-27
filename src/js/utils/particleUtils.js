@@ -1,11 +1,11 @@
 import constants from 'js/utils/constants';
 
 export function getNoisySpeed() {
-  return constants.LINE_SPEED + (Math.random() - 0.5) * constants.LINE_SPEED_NOISE;
+  return constants.PARTICLE_SPEED + (Math.random() - 0.5) * constants.PARTICLE_SPEED_NOISE;
 }
 
 export function getNoisyLength() {
-  return constants.LINE_LENGTH + (Math.random() - 0.5) * constants.LINE_LENGTH_NOISE;
+  return constants.PARTICLE_LENGTH + (Math.random() - 0.5) * constants.PARTICLE_LENGTH_NOISE;
 }
 
 export function getNoisyAngles(currentAngle, numAngles) {
@@ -18,7 +18,7 @@ export function getNoisyAngles(currentAngle, numAngles) {
 
   for (let i = 0; i < numAngles; i++) {
     let angle = bottomAngleBound + angleRange / 2;
-    angle += (Math.random() - 0.5) * constants.LINE_ANGLE_NOISE;
+    angle += (Math.random() - 0.5) * constants.PARTICLE_ANGLE_NOISE;
     newAngles.push(angle % 360);
     bottomAngleBound += angleRange;
   }

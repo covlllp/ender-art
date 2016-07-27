@@ -12,5 +12,8 @@ export const getEndPoint = (startPoint, angle, length) => {
 };
 
 export function getGrowthRate() {
-  return Math.round(globals.promiscuityLevel + (Math.random() - 0.5) * constants.GROWTH_NOISE);
+  return Math.max(
+    Math.round(globals.promiscuityLevel + (Math.random() - 0.5) * constants.GROWTH_NOISE),
+    0
+  );
 }

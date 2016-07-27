@@ -1,4 +1,4 @@
-import Line from 'js/modules/line';
+import Particle from 'js/modules/particle';
 import constants from 'js/utils/constants';
 import { getGrowthRate } from 'js/utils/mathUtils';
 
@@ -6,7 +6,7 @@ class StageContainer {
   constructor(renderer) {
     this.stage = new PIXI.Container();
     this.renderer = renderer;
-    this.lines = [];
+    this.particles = [];
   }
 
   addToStage(element) {
@@ -17,34 +17,32 @@ class StageContainer {
     this.stage.removeChild(element);
   }
 
-  addLine(line) {
-    if (!line.isInWindow || this.lines.length > constants.LINE_MAX) return;
-    this.lines.push(line);
-    this.addToStage(line.circle);
+  addParticle(particle) {
+    if (!particle.isInWindow || this.particles.length > constants.PARTICLE_MAX) return;
+    this.particles.push(particle);
+    this.addToStage(particle.circle);
   }
 
   tick() {
-    const newLines = [];
-    this.lines = this.lines.filter((line) => {
-      line.nextFrame();
+    const newParticles = [];
+    this.particles = this.particles.filter((particle) => {
+      particle.nextFrame();
 
-      if (!line.isGrowing) {
-        this.removeFromStage(line.circle);
-        if (!line.hasHadChildren) {
-          const childLines = line.getChildLines(getGrowthRate());
-          childLines.forEach((childLine) => {
-            newLines.push(childLine);
-          });
-        }
+      if (!particle.shouldBeDrawn) {
+        this.removeFromStage(particle.circle);
+        const childParticles = particle.getChildParticles(getGrowthRate());
+        childParticles.forEach((childParticle) => {
+          newParticles.push(childParticle);
+        });
         return false;
       }
       return true;
     });
 
-    newLines.forEach((line) => { this.addLine(line); });
+    newParticles.forEach((particle) => { this.addParticle(particle); });
 
-    while (this.lines.length < constants.LINE_MIN) {
-      this.addLine(Line.generateRandomLine());
+    while (this.particles.length < constants.PARTICLE_MIN) {
+      this.addParticle(Particle.generateRandomParticle());
     }
 
     this.renderStage();

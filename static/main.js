@@ -99,21 +99,21 @@
 	  value: true
 	});
 	exports.default = {
-	  LINE_WIDTH: 1,
-	  LINE_LENGTH: 50,
-	  LINE_LENGTH_NOISE: 30,
-	  LINE_COLOR: 8355711,
-	  LINE_SPEED: 0.001,
-	  LINE_SPEED_NOISE: 0.005,
-	  LINE_ANGLE_NOISE: 30,
-	  LINE_MAX: 5000,
-	  LINE_MIN: 5,
-	  CIRCLE_RADIUS: 3,
+	  PARTICLE_LENGTH: 50,
+	  PARTICLE_LENGTH_NOISE: 30,
+	  PARTICLE_SPEED: 0.05,
+	  PARTICLE_SPEED_NOISE: 0.05,
+	  PARTICLE_ANGLE_NOISE: 30,
+	  PARTICLE_MAX: 5000,
+	  PARTICLE_MIN: 5,
+	  CIRCLE_RADIUS: 4,
+	  CIRCLE_ALPHA: 1,
+	  CIRCLE_ALPHA_DECAY: 0.03,
 	  COLOR_STEPS: 500,
 	  COLOR_NOISE: 100,
 	  PROMISCUITY_MAX: 3,
-	  GROWTH_RATE: 0.00001,
-	  GROWTH_NOISE: 1
+	  GROWTH_RATE: 0.005,
+	  GROWTH_NOISE: 2
 	};
 
 /***/ },
@@ -128,9 +128,9 @@
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _line = __webpack_require__(4);
+	var _particle = __webpack_require__(4);
 
-	var _line2 = _interopRequireDefault(_line);
+	var _particle2 = _interopRequireDefault(_particle);
 
 	var _constants = __webpack_require__(2);
 
@@ -148,7 +148,7 @@
 
 	    this.stage = new PIXI.Container();
 	    this.renderer = renderer;
-	    this.lines = [];
+	    this.particles = [];
 	  }
 
 	  _createClass(StageContainer, [{
@@ -162,40 +162,38 @@
 	      this.stage.removeChild(element);
 	    }
 	  }, {
-	    key: 'addLine',
-	    value: function addLine(line) {
-	      if (!line.isInWindow || this.lines.length > _constants2.default.LINE_MAX) return;
-	      this.lines.push(line);
-	      this.addToStage(line.circle);
+	    key: 'addParticle',
+	    value: function addParticle(particle) {
+	      if (!particle.isInWindow || this.particles.length > _constants2.default.PARTICLE_MAX) return;
+	      this.particles.push(particle);
+	      this.addToStage(particle.circle);
 	    }
 	  }, {
 	    key: 'tick',
 	    value: function tick() {
 	      var _this = this;
 
-	      var newLines = [];
-	      this.lines = this.lines.filter(function (line) {
-	        line.nextFrame();
+	      var newParticles = [];
+	      this.particles = this.particles.filter(function (particle) {
+	        particle.nextFrame();
 
-	        if (!line.isGrowing) {
-	          _this.removeFromStage(line.circle);
-	          if (!line.hasHadChildren) {
-	            var childLines = line.getChildLines((0, _mathUtils.getGrowthRate)());
-	            childLines.forEach(function (childLine) {
-	              newLines.push(childLine);
-	            });
-	          }
+	        if (!particle.shouldBeDrawn) {
+	          _this.removeFromStage(particle.circle);
+	          var childParticles = particle.getChildParticles((0, _mathUtils.getGrowthRate)());
+	          childParticles.forEach(function (childParticle) {
+	            newParticles.push(childParticle);
+	          });
 	          return false;
 	        }
 	        return true;
 	      });
 
-	      newLines.forEach(function (line) {
-	        _this.addLine(line);
+	      newParticles.forEach(function (particle) {
+	        _this.addParticle(particle);
 	      });
 
-	      while (this.lines.length < _constants2.default.LINE_MIN) {
-	        this.addLine(_line2.default.generateRandomLine());
+	      while (this.particles.length < _constants2.default.PARTICLE_MIN) {
+	        this.addParticle(_particle2.default.generateRandomParticle());
 	      }
 
 	      this.renderStage();
@@ -233,7 +231,7 @@
 
 	var _mathUtils = __webpack_require__(6);
 
-	var _lineUtils = __webpack_require__(7);
+	var _particleUtils = __webpack_require__(7);
 
 	var _colorUtils = __webpack_require__(8);
 
@@ -245,15 +243,14 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var Line = function () {
-	  function Line(startPoint, angle, length, color, speed) {
-	    _classCallCheck(this, Line);
+	var Particle = function () {
+	  function Particle(startPoint, angle, length, color, speed) {
+	    _classCallCheck(this, Particle);
 
 	    this.startPoint = startPoint;
 	    this.targetPoint = (0, _mathUtils.getEndPoint)(startPoint, angle, length);
 	    this.angle = angle;
 	    this.length = length;
-	    this.color = color;
 	    this.speed = speed;
 
 	    this.percentage = 0;
@@ -262,7 +259,7 @@
 	    var circle = new PIXI.Sprite(texture);
 	    circle.width = circle.height = _constants2.default.CIRCLE_RADIUS * 2;
 	    circle.tint = color;
-	    circle.alpha = 0.8;
+	    circle.alpha = _constants2.default.CIRCLE_ALPHA;
 	    circle.anchor = {
 	      x: 0.5,
 	      y: 0.5
@@ -272,7 +269,7 @@
 	    this.moveCircle(startPoint);
 	  }
 
-	  _createClass(Line, [{
+	  _createClass(Particle, [{
 	    key: 'moveCircle',
 	    value: function moveCircle(point) {
 	      this.circle.position.x = point.x;
@@ -287,17 +284,18 @@
 	    key: 'nextFrame',
 	    value: function nextFrame() {
 	      this.percentage += this.speed;
+	      this.circle.alpha -= _constants2.default.CIRCLE_ALPHA_DECAY;
 	      this.moveCircle(this.getCurrentPosition());
 	    }
 	  }, {
-	    key: 'getChildLines',
-	    value: function getChildLines(numChildren) {
+	    key: 'getChildParticles',
+	    value: function getChildParticles(numChildren) {
 	      var _this = this;
 
 	      this.hasHadChildren = true;
-	      var newAngles = (0, _lineUtils.getNoisyAngles)(this.angle, numChildren);
+	      var newAngles = (0, _particleUtils.getNoisyAngles)(this.angle, numChildren);
 	      return newAngles.map(function (angle) {
-	        return new Line(_this.targetPoint, angle, (0, _lineUtils.getNoisyLength)(), (0, _colorUtils.getNoisyColor)(), (0, _lineUtils.getNoisySpeed)());
+	        return new Particle(_this.targetPoint, angle, (0, _particleUtils.getNoisyLength)(), (0, _colorUtils.getNoisyColor)(), (0, _particleUtils.getNoisySpeed)());
 	      });
 	    }
 	  }, {
@@ -313,18 +311,18 @@
 	      return targetPoint.x > 0 && targetPoint.y > 0 && targetPoint.x < window.innerWidth && targetPoint.y < window.innerHeight;
 	    }
 	  }], [{
-	    key: 'generateRandomLine',
-	    value: function generateRandomLine() {
+	    key: 'generateRandomParticle',
+	    value: function generateRandomParticle() {
 	      var randomPoint = new _point2.default(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
 	      var randomAngle = Math.random() * 360;
-	      return new Line(randomPoint, randomAngle, (0, _lineUtils.getNoisyLength)(), (0, _colorUtils.getNoisyColor)(), (0, _lineUtils.getNoisySpeed)());
+	      return new Particle(randomPoint, randomAngle, (0, _particleUtils.getNoisyLength)(), (0, _colorUtils.getNoisyColor)(), (0, _particleUtils.getNoisySpeed)());
 	    }
 	  }]);
 
-	  return Line;
+	  return Particle;
 	}();
 
-	exports.default = Line;
+	exports.default = Particle;
 
 /***/ },
 /* 5 */
@@ -385,7 +383,7 @@
 	};
 
 	function getGrowthRate() {
-	  return Math.round(_globals2.default.promiscuityLevel + (Math.random() - 0.5) * _constants2.default.GROWTH_NOISE);
+	  return Math.max(Math.round(_globals2.default.promiscuityLevel + (Math.random() - 0.5) * _constants2.default.GROWTH_NOISE), 0);
 	}
 
 /***/ },
@@ -408,11 +406,11 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getNoisySpeed() {
-	  return _constants2.default.LINE_SPEED + (Math.random() - 0.5) * _constants2.default.LINE_SPEED_NOISE;
+	  return _constants2.default.PARTICLE_SPEED + (Math.random() - 0.5) * _constants2.default.PARTICLE_SPEED_NOISE;
 	}
 
 	function getNoisyLength() {
-	  return _constants2.default.LINE_LENGTH + (Math.random() - 0.5) * _constants2.default.LINE_LENGTH_NOISE;
+	  return _constants2.default.PARTICLE_LENGTH + (Math.random() - 0.5) * _constants2.default.PARTICLE_LENGTH_NOISE;
 	}
 
 	function getNoisyAngles(currentAngle, numAngles) {
@@ -425,7 +423,7 @@
 
 	  for (var i = 0; i < numAngles; i++) {
 	    var angle = bottomAngleBound + angleRange / 2;
-	    angle += (Math.random() - 0.5) * _constants2.default.LINE_ANGLE_NOISE;
+	    angle += (Math.random() - 0.5) * _constants2.default.PARTICLE_ANGLE_NOISE;
 	    newAngles.push(angle % 360);
 	    bottomAngleBound += angleRange;
 	  }
