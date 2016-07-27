@@ -199,7 +199,6 @@
 	      }
 
 	      this.renderStage();
-	      debugger;
 	    }
 	  }, {
 	    key: 'renderStage',
@@ -264,7 +263,10 @@
 	    circle.width = circle.height = _constants2.default.CIRCLE_RADIUS * 2;
 	    circle.tint = color;
 	    circle.alpha = 0.8;
-	    circle.anchor.x = circle.anchor.y = 0.5;
+	    circle.anchor = {
+	      x: 0.5,
+	      y: 0.5
+	    };
 	    this.circle = circle;
 
 	    this.moveCircle(startPoint);

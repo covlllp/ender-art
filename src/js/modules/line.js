@@ -21,7 +21,10 @@ class Line {
     circle.width = circle.height = constants.CIRCLE_RADIUS * 2;
     circle.tint = color;
     circle.alpha = 0.8;
-    circle.anchor.x = circle.anchor.y = 0.5;
+    circle.anchor = {
+      x: 0.5,
+      y: 0.5,
+    };
     this.circle = circle;
 
     this.moveCircle(startPoint);

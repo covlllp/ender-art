@@ -48,7 +48,6 @@ class StageContainer {
     }
 
     this.renderStage();
-    debugger;
   }
 
   renderStage() {
