@@ -53,7 +53,4 @@ class StageContainer {
   }
 }
 
-const renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.view);
-
-export default new StageContainer(renderer);
+export default StageContainer;

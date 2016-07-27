@@ -1,6 +1,11 @@
 import globals from 'js/globals';
 import constants from 'js/utils/constants';
-import stageContainer from 'js/modules/stageContainer';
+import StageContainer from 'js/modules/stageContainer';
+import $ from 'jquery';
+
+const renderer = PIXI.autoDetectRenderer($(window).width(), $(window).height());
+const stageContainer = new StageContainer(renderer);
+document.body.appendChild(renderer.view);
 
 function animate() {
   requestAnimationFrame(animate);
@@ -14,4 +19,13 @@ function animate() {
   stageContainer.tick();
 }
 
+function resize() {
+  const width = $(window).width() - 1;
+  const height = $(window).height() - 1;
+  renderer.resize(width, height);
+}
+
+
+resize();
+$(window).resize(resize);
 animate();
